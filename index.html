@@ -13,445 +13,197 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
-/* ══════════════════════════════════════
-   RESET & VARIABILI
-══════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   height: 100%;
   background: #02040a;
   color: #d0e8ff;
-  /* font più grande per mobile */
   font-family: 'Share Tech Mono', monospace;
   font-size: 15px;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
 }
+#bg-canvas { position: fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+#app { position: relative; z-index:1; display:flex; flex-direction:column; min-height:100vh; }
 
-/* SFONDO */
-#bg-canvas {
-  position: fixed; top: 0; left: 0;
-  width: 100%; height: 100%;
-  z-index: 0; pointer-events: none;
-}
-
-/* WRAPPER */
-#app {
-  position: relative; z-index: 1;
-  display: flex; flex-direction: column;
-  min-height: 100vh;
-}
-
-/* ══ LOADING ══ */
+/* LOADING */
 #loading {
-  position: fixed; inset: 0; z-index: 999;
-  background: #02040a;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 16px;
+  position:fixed; inset:0; z-index:999; background:#02040a;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
 }
-#loading h1 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 28px; color: #ffd700; letter-spacing: 4px;
-}
-#load-sub { font-size: 11px; color: #4488aa; letter-spacing: 3px; }
-.spinner {
-  width: 32px; height: 32px;
-  border: 2px solid #002d3d;
-  border-top-color: #ffd700;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-#load-err {
-  font-size: 12px; color: #ff3355;
-  text-align: center; max-width: 300px;
-  line-height: 1.9; display: none; padding: 0 10px;
-}
-#load-retry {
-  display: none; padding: 12px 24px;
-  background: #3a2d00; color: #ffd700;
-  border: 1px solid #ffd700; border-radius: 4px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 13px; cursor: pointer;
-}
+#loading h1 { font-family:'Orbitron',sans-serif; font-size:28px; color:#ffd700; letter-spacing:4px; }
+#load-sub   { font-size:11px; color:#4488aa; letter-spacing:3px; }
+.spinner { width:32px; height:32px; border:2px solid #002d3d; border-top-color:#ffd700; border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+#load-err   { font-size:12px; color:#ff3355; text-align:center; max-width:300px; line-height:1.9; display:none; padding:0 10px; }
+#load-retry { display:none; padding:12px 24px; background:#3a2d00; color:#ffd700; border:1px solid #ffd700; border-radius:4px; font-family:'Share Tech Mono',monospace; font-size:13px; cursor:pointer; }
 
-/* ══ TOPBAR ══ */
+/* TOPBAR */
 #topbar {
-  flex-shrink: 0;
-  background: #05080f;
-  border-bottom: 1px solid #002d3d;
-  padding: 12px 18px 10px;
-  display: flex; align-items: center; justify-content: space-between;
-  position: relative;
+  flex-shrink:0; background:#05080f; border-bottom:1px solid #002d3d;
+  padding:12px 18px 10px; display:flex; align-items:center; justify-content:space-between; position:relative;
 }
-#topbar::after {
-  content: ''; position: absolute;
-  bottom: -1px; left: 0;
-  width: 88px; height: 2px; background: #ffd700;
-}
-#logo {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 17px; font-weight: 900;
-  color: #ffd700; letter-spacing: 2px;
-}
-#logo small {
-  display: block; font-size: 9px;
-  color: #4488aa; letter-spacing: 2px;
-  margin-top: 2px; font-family: 'Share Tech Mono', monospace;
-  font-weight: normal;
-}
-#sync-wrap { display: flex; align-items: center; gap: 6px; }
-#sync-dot {
-  width: 9px; height: 9px;
-  border-radius: 50%; background: #002d3d;
-  transition: all 0.3s;
-}
-#sync-dot.online  { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
-#sync-dot.syncing { background: #ffd700; animation: blink 0.7s infinite; }
-#sync-dot.offline { background: #ff3355; }
-#sync-text { font-size: 10px; color: #4488aa; letter-spacing: 1px; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+#topbar::after { content:''; position:absolute; bottom:-1px; left:0; width:88px; height:2px; background:#ffd700; }
+#logo { font-family:'Orbitron',sans-serif; font-size:17px; font-weight:900; color:#ffd700; letter-spacing:2px; }
+#logo small { display:block; font-size:9px; color:#4488aa; letter-spacing:2px; margin-top:2px; font-family:'Share Tech Mono',monospace; font-weight:normal; }
+#sync-wrap { display:flex; align-items:center; gap:6px; }
+#sync-dot  { width:9px; height:9px; border-radius:50%; background:#002d3d; transition:all .3s; }
+#sync-dot.online  { background:#00ff88; box-shadow:0 0 6px #00ff88; }
+#sync-dot.syncing { background:#ffd700; animation:blink .7s infinite; }
+#sync-dot.offline { background:#ff3355; }
+#sync-text { font-size:10px; color:#4488aa; letter-spacing:1px; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
 
-/* ══ TABS ══ */
-#tabs {
-  flex-shrink: 0;
-  display: flex;
-  background: #05080f;
-  border-bottom: 1px solid #002d3d;
-}
+/* TABS */
+#tabs { flex-shrink:0; display:flex; background:#05080f; border-bottom:1px solid #002d3d; }
 .tab {
-  flex: 1; padding: 12px 2px;
-  text-align: center;
-  font-size: 11px; letter-spacing: 1px;
-  color: #4488aa; cursor: pointer;
-  border-bottom: 2px solid transparent;
-  user-select: none; -webkit-user-select: none;
-  transition: color .2s, border-color .2s;
+  flex:1; padding:12px 2px; text-align:center; font-size:11px; letter-spacing:1px;
+  color:#4488aa; cursor:pointer; border-bottom:2px solid transparent;
+  user-select:none; -webkit-user-select:none; transition:color .2s, border-color .2s;
 }
-.tab.active { color: #ffd700; border-bottom-color: #ffd700; }
+.tab.active { color:#ffd700; border-bottom-color:#ffd700; }
 
-/* ══ PAGES ══ */
-.page { display: none; padding: 14px 14px 50px; }
-.page.active { display: block; }
+/* PAGES */
+.page { display:none; padding:14px 14px 60px; }
+.page.active { display:block; }
 
-/* ══ CARD ══ */
-.card {
-  background: #090e18;
-  border: 1px solid #002d3d;
-  border-radius: 6px;
-  padding: 16px;
-  margin-bottom: 12px;
-  position: relative;
-}
-.card::before {
-  content: ''; position: absolute;
-  top: 0; left: 0; width: 3px; height: 100%;
-  background: #ffd700;
-  border-radius: 3px 0 0 3px;
-}
-.card-title { font-size: 11px; letter-spacing: 2px; color: #ffd700; margin-bottom: 14px; }
+/* CARD */
+.card { background:#090e18; border:1px solid #002d3d; border-radius:6px; padding:16px; margin-bottom:12px; position:relative; }
+.card::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:#ffd700; border-radius:3px 0 0 3px; }
+.card-title { font-size:11px; letter-spacing:2px; color:#ffd700; margin-bottom:14px; }
 
-/* ══ CLASSIFICA ══ */
-.rank-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 14px;
-  border-bottom: 1px solid #0d1828;
-}
-.rank-badge {
-  width: 36px; height: 36px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 12px; font-weight: 700; flex-shrink: 0;
-}
-.rank-badge.r1 { background: #3a2d00; color: #ffd700; border: 1px solid #ffd700; }
-.rank-badge.r2 { background: #1a1a20; color: #c0c8d8; border: 1px solid #c0c8d8; }
-.rank-badge.r3 { background: #1a1005; color: #cd7f32; border: 1px solid #cd7f32; }
-.rank-badge.rn { background: #0c1220; color: #4488aa; border: 1px solid #002d3d; }
-.rank-info { flex: 1; min-width: 0; }
-.rank-name { font-size: 15px; color: #d0e8ff; }
-.rank-sub  { font-size: 10px; color: #4488aa; margin-top: 3px; }
-.rank-money { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; flex-shrink: 0; }
-.rank-money.pos  { color: #00ff88; }
-.rank-money.neg  { color: #ff3355; }
-.rank-money.zero { color: #4488aa; }
+/* RANK */
+.rank-row { display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid #0d1828; }
+.rank-badge { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; flex-shrink:0; }
+.rank-badge.r1 { background:#3a2d00; color:#ffd700; border:1px solid #ffd700; }
+.rank-badge.r2 { background:#1a1a20; color:#c0c8d8; border:1px solid #c0c8d8; }
+.rank-badge.r3 { background:#1a1005; color:#cd7f32; border:1px solid #cd7f32; }
+.rank-badge.rn { background:#0c1220; color:#4488aa; border:1px solid #002d3d; }
+.rank-info  { flex:1; min-width:0; }
+.rank-name  { font-size:15px; color:#d0e8ff; }
+.rank-sub   { font-size:10px; color:#4488aa; margin-top:3px; }
+.rank-money { font-family:'Orbitron',sans-serif; font-size:14px; font-weight:700; flex-shrink:0; }
+.rank-money.pos  { color:#00ff88; }
+.rank-money.neg  { color:#ff3355; }
+.rank-money.zero { color:#4488aa; }
 
-/* ══ FORM ══ */
-.step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-.step-num {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: #3a2d00; color: #ffd700;
-  border: 1px solid #ffd700;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; flex-shrink: 0;
-}
-.step-title { font-size: 12px; letter-spacing: 2px; color: #ffd700; }
-label.field-label {
-  display: block; font-size: 10px;
-  color: #4488aa; letter-spacing: 1.5px; margin-bottom: 6px;
-}
+/* FORM */
+.step-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.step-num  { width:26px; height:26px; border-radius:50%; background:#3a2d00; color:#ffd700; border:1px solid #ffd700; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+.step-title { font-size:12px; letter-spacing:2px; color:#ffd700; }
+label.field-label { display:block; font-size:10px; color:#4488aa; letter-spacing:1.5px; margin-bottom:6px; }
 .field-input, .field-select {
-  width: 100%; padding: 13px 14px;
-  background: #060c16; color: #d0e8ff;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 15px;
-  border: 1px solid #002d3d; border-radius: 4px;
-  outline: none; -webkit-appearance: none; appearance: none;
+  width:100%; padding:13px 14px; background:#060c16; color:#d0e8ff;
+  font-family:'Share Tech Mono',monospace; font-size:15px;
+  border:1px solid #002d3d; border-radius:4px; outline:none; -webkit-appearance:none; appearance:none;
 }
-.field-input:focus, .field-select:focus { border-color: #ffd700; }
-.field-input.gold { color: #ffd700; }
-option { background: #060c16; }
+.field-input:focus, .field-select:focus { border-color:#ffd700; }
+.field-input.gold { color:#ffd700; }
+option { background:#060c16; }
 
-/* ── Griglia giocatori ──
-   FIX CRITICO: nessun onclick inline con JSON — uso data-index
-   e addEventListener per evitare problemi con nomi con spazi/apostrofi
-*/
-.player-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+/* Quota badge — mostrato nell'infobar durante i rientri */
+.quota-badge {
+  display:inline-block; padding:3px 8px;
+  background:#3a2d00; color:#ffd700;
+  border:1px solid #ffd700; border-radius:3px;
+  font-size:11px; font-family:'Orbitron',sans-serif;
+}
+
+/* Player grid */
+.player-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
 .player-card {
-  display: flex; align-items: center; gap: 10px;
-  padding: 14px 12px;
-  background: #060c16; border: 2px solid #002d3d;
-  border-radius: 5px; cursor: pointer;
-  user-select: none; -webkit-user-select: none;
-  transition: background .15s, border-color .15s;
-  /* area touch generosa */
-  min-height: 52px;
+  display:flex; align-items:center; gap:10px; padding:14px 12px;
+  background:#060c16; border:2px solid #002d3d; border-radius:5px;
+  cursor:pointer; user-select:none; -webkit-user-select:none;
+  transition:background .15s, border-color .15s; min-height:52px;
 }
-.player-card.selected { border-color: #ffd700; background: #3a2d00; }
-.player-dot {
-  width: 11px; height: 11px; border-radius: 50%;
-  background: #002d3d; flex-shrink: 0;
-  transition: background .15s;
-}
-.player-card.selected .player-dot { background: #ffd700; }
-.player-card-name { font-size: 13px; color: #d0e8ff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player-card.selected { border-color:#ffd700; background:#3a2d00; }
+.player-dot { width:11px; height:11px; border-radius:50%; background:#002d3d; flex-shrink:0; transition:background .15s; }
+.player-card.selected .player-dot { background:#ffd700; }
+.player-card-name { font-size:13px; color:#d0e8ff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-/* podio */
-.podium-slot { padding: 12px 14px; background: #060c16; border-radius: 4px; margin-bottom: 10px; }
-.podium-slot.p1 { border-left: 3px solid #ffd700; }
-.podium-slot.p2 { border-left: 3px solid #c0c8d8; }
-.podium-slot.p3 { border-left: 3px solid #cd7f32; }
-.podium-label { font-size: 11px; color: #4488aa; letter-spacing: 1px; margin-bottom: 8px; }
-.podium-label.p1 { color: #ffd700; }
-.podium-label.p2 { color: #c0c8d8; }
-.podium-label.p3 { color: #cd7f32; }
-.podium-row { display: flex; gap: 10px; }
+/* Podio */
+.podium-slot { padding:12px 14px; background:#060c16; border-radius:4px; margin-bottom:10px; }
+.podium-slot.p1 { border-left:3px solid #ffd700; }
+.podium-slot.p2 { border-left:3px solid #c0c8d8; }
+.podium-slot.p3 { border-left:3px solid #cd7f32; }
+.podium-label { font-size:11px; color:#4488aa; letter-spacing:1px; margin-bottom:8px; }
+.podium-label.p1 { color:#ffd700; } .podium-label.p2 { color:#c0c8d8; } .podium-label.p3 { color:#cd7f32; }
+.podium-row { display:flex; gap:10px; }
 
-/* rientri */
-.re-player {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 14px; background: #060c16;
-  border: 1px solid #002d3d; border-radius: 4px; margin-bottom: 8px;
-}
-.re-player-name { font-size: 14px; color: #d0e8ff; }
-.re-controls { display: flex; align-items: center; gap: 14px; }
-.count-btn {
-  width: 38px; height: 38px; border-radius: 50%;
-  background: #0c1220; border: 1px solid #002d3d;
-  color: #00e5ff; font-size: 22px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  -webkit-appearance: none; line-height: 1; flex-shrink: 0;
-}
-.count-btn:active { background: #002d3d; }
-.count-val {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 17px; color: #ffd700;
-  min-width: 24px; text-align: center;
-}
+/* Rientri */
+.re-player { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#060c16; border:1px solid #002d3d; border-radius:4px; margin-bottom:8px; }
+.re-player-name { font-size:14px; color:#d0e8ff; }
+.re-controls { display:flex; align-items:center; gap:14px; }
+.count-btn { width:38px; height:38px; border-radius:50%; background:#0c1220; border:1px solid #002d3d; color:#00e5ff; font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-appearance:none; line-height:1; flex-shrink:0; }
+.count-btn:active { background:#002d3d; }
+.count-val { font-family:'Orbitron',sans-serif; font-size:17px; color:#ffd700; min-width:24px; text-align:center; }
 
-/* bottoni navigazione */
-.nav-row { display: flex; gap: 10px; margin-top: 14px; }
-.btn-secondary {
-  flex: 1; padding: 14px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 13px; letter-spacing: 1px;
-  background: #0c1220; color: #4488aa;
-  border: 1px solid #002d3d; border-radius: 4px;
-  cursor: pointer; -webkit-appearance: none;
-}
-.btn-secondary:active { background: #002d3d; }
-.btn-primary {
-  flex: 2; padding: 14px;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 12px; font-weight: 700; letter-spacing: 2px;
-  background: #ffd700; color: #02040a;
-  border: none; border-radius: 4px;
-  cursor: pointer; -webkit-appearance: none;
-}
-.btn-primary:active { transform: scale(0.97); }
-.btn-danger {
-  padding: 10px 14px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 11px; letter-spacing: 1px;
-  background: #280010; color: #ff3355;
-  border: 1px solid #440018; border-radius: 4px;
-  cursor: pointer; -webkit-appearance: none;
-}
-.info-bar {
-  display: flex; justify-content: space-between;
-  padding: 9px 12px; background: #0c1220;
-  border-radius: 4px; font-size: 11px; margin-bottom: 12px;
-}
-.info-bar span { color: #4488aa; }
-.info-bar strong { color: #ffd700; }
+/* Bottoni */
+.nav-row { display:flex; gap:10px; margin-top:14px; }
+.btn-secondary { flex:1; padding:14px; font-family:'Share Tech Mono',monospace; font-size:13px; letter-spacing:1px; background:#0c1220; color:#4488aa; border:1px solid #002d3d; border-radius:4px; cursor:pointer; -webkit-appearance:none; }
+.btn-secondary:active { background:#002d3d; }
+.btn-primary { flex:2; padding:14px; font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; letter-spacing:2px; background:#ffd700; color:#02040a; border:none; border-radius:4px; cursor:pointer; -webkit-appearance:none; }
+.btn-primary:active { transform:scale(.97); }
+.btn-danger { padding:10px 14px; font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:1px; background:#280010; color:#ff3355; border:1px solid #440018; border-radius:4px; cursor:pointer; -webkit-appearance:none; }
+.info-bar { display:flex; justify-content:space-between; padding:9px 12px; background:#0c1220; border-radius:4px; font-size:11px; margin-bottom:12px; }
+.info-bar span { color:#4488aa; } .info-bar strong { color:#ffd700; }
 
-/* ══ STORICO ══ */
-.session-card {
-  background: #090e18; border: 1px solid #002d3d;
-  border-radius: 6px; margin-bottom: 12px; overflow: hidden;
-}
-.session-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; border-bottom: 1px solid #002d3d;
-  cursor: pointer; background: #0c1220;
-}
-.session-date { font-family: 'Orbitron', sans-serif; font-size: 12px; color: #ffd700; }
-.session-meta { font-size: 10px; color: #4488aa; margin-top: 3px; }
-.session-body { padding: 14px 16px; display: none; }
-.session-body.open { display: block; }
-.medals-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-.medal {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 10px; background: #060c16;
-  border-radius: 4px; font-size: 12px;
-}
-.medal.m1 { border-left: 2px solid #ffd700; color: #ffd700; }
-.medal.m2 { border-left: 2px solid #c0c8d8; color: #c0c8d8; }
-.medal.m3 { border-left: 2px solid #cd7f32; color: #cd7f32; }
-.player-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.player-tag {
-  padding: 4px 10px; background: #0c1220;
-  border: 1px solid #002d3d; border-radius: 3px;
-  font-size: 11px; color: #4488aa;
-}
-.prize-row {
-  display: flex; justify-content: space-between;
-  font-size: 12px; padding: 5px 0;
-  border-bottom: 1px solid #0d1828;
-}
+/* Storico */
+.session-card { background:#090e18; border:1px solid #002d3d; border-radius:6px; margin-bottom:12px; overflow:hidden; }
+.session-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #002d3d; cursor:pointer; background:#0c1220; }
+.session-date { font-family:'Orbitron',sans-serif; font-size:12px; color:#ffd700; }
+.session-meta { font-size:10px; color:#4488aa; margin-top:3px; }
+.session-body { padding:14px 16px; display:none; }
+.session-body.open { display:block; }
+.medals-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.medal { display:flex; align-items:center; gap:6px; padding:6px 10px; background:#060c16; border-radius:4px; font-size:12px; }
+.medal.m1 { border-left:2px solid #ffd700; color:#ffd700; }
+.medal.m2 { border-left:2px solid #c0c8d8; color:#c0c8d8; }
+.medal.m3 { border-left:2px solid #cd7f32; color:#cd7f32; }
+.player-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.player-tag { padding:4px 10px; background:#0c1220; border:1px solid #002d3d; border-radius:3px; font-size:11px; color:#4488aa; }
+.prize-row { display:flex; justify-content:space-between; font-size:12px; padding:5px 0; border-bottom:1px solid #0d1828; }
 
-/* ══ GIOCATORI ══ */
-.player-stat-card {
-  background: #090e18; border: 1px solid #002d3d;
-  border-radius: 6px; padding: 16px; margin-bottom: 12px;
-}
-.player-stat-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.player-avatar {
-  width: 44px; height: 44px; border-radius: 50%;
-  background: #3a2d00; border: 1px solid #ffd700;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Orbitron', sans-serif; font-size: 15px;
-  color: #ffd700; flex-shrink: 0;
-}
-.stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
-.stat-box { background: #060c16; border-radius: 4px; padding: 10px; text-align: center; }
-.stat-value { font-family: 'Orbitron', sans-serif; font-size: 15px; color: #00e5ff; }
-.stat-label { font-size: 9px; color: #4488aa; letter-spacing: 1px; margin-top: 4px; }
+/* Giocatori */
+.player-stat-card { background:#090e18; border:1px solid #002d3d; border-radius:6px; padding:16px; margin-bottom:12px; }
+.player-stat-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.player-avatar { width:44px; height:44px; border-radius:50%; background:#3a2d00; border:1px solid #ffd700; display:flex; align-items:center; justify-content:center; font-family:'Orbitron',sans-serif; font-size:15px; color:#ffd700; flex-shrink:0; }
+.stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.stat-box { background:#060c16; border-radius:4px; padding:10px; text-align:center; }
+.stat-value { font-family:'Orbitron',sans-serif; font-size:15px; color:#00e5ff; }
+.stat-label { font-size:9px; color:#4488aa; letter-spacing:1px; margin-top:4px; }
+.manage-player-row { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#060c16; border:1px solid #002d3d; border-radius:4px; margin-bottom:8px; }
+.manage-player-name { font-size:14px; color:#d0e8ff; }
+.remove-btn { background:none; border:1px solid #002d3d; color:#4488aa; font-size:11px; cursor:pointer; padding:8px 12px; border-radius:3px; font-family:'Share Tech Mono',monospace; letter-spacing:1px; -webkit-appearance:none; min-height:38px; min-width:95px; }
+.remove-btn:active { border-color:#ff3355; color:#ff3355; }
+.add-row { display:flex; gap:10px; margin-top:10px; }
+.add-row input { flex:1; padding:13px 14px; background:#060c16; color:#d0e8ff; font-family:'Share Tech Mono',monospace; font-size:14px; border:1px solid #002d3d; border-radius:4px; outline:none; -webkit-appearance:none; }
+.add-row input:focus { border-color:#ffd700; }
+.add-row button { padding:13px 16px; background:#3a2d00; color:#ffd700; border:1px solid #ffd700; border-radius:4px; font-family:'Share Tech Mono',monospace; font-size:13px; cursor:pointer; -webkit-appearance:none; white-space:nowrap; }
 
-/* FIX CRITICO per bottone rimuovi:
-   uso data-player e addEventListener invece di onclick inline
-*/
-.manage-player-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 14px; background: #060c16;
-  border: 1px solid #002d3d; border-radius: 4px; margin-bottom: 8px;
-}
-.manage-player-name { font-size: 14px; color: #d0e8ff; }
-.remove-btn {
-  background: none; border: 1px solid #002d3d;
-  color: #4488aa; font-size: 11px; cursor: pointer;
-  padding: 7px 11px; border-radius: 3px;
-  font-family: 'Share Tech Mono', monospace;
-  letter-spacing: 1px; -webkit-appearance: none;
-  /* area touch sufficiente */
-  min-height: 36px; min-width: 90px;
-}
-.remove-btn:active { border-color: #ff3355; color: #ff3355; }
-.add-row { display: flex; gap: 10px; margin-top: 10px; }
-.add-row input {
-  flex: 1; padding: 13px 14px;
-  background: #060c16; color: #d0e8ff;
-  font-family: 'Share Tech Mono', monospace; font-size: 14px;
-  border: 1px solid #002d3d; border-radius: 4px;
-  outline: none; -webkit-appearance: none;
-}
-.add-row input:focus { border-color: #ffd700; }
-.add-row button {
-  padding: 13px 16px;
-  background: #3a2d00; color: #ffd700;
-  border: 1px solid #ffd700; border-radius: 4px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 13px; cursor: pointer;
-  -webkit-appearance: none; white-space: nowrap;
-}
+/* PIN MODAL */
+#pin-modal { position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:990; display:none; align-items:center; justify-content:center; }
+#pin-modal.open { display:flex; }
+#pin-box { background:#090e18; border:1px solid #ffd700; border-radius:8px; padding:28px 24px; width:290px; max-width:90vw; text-align:center; }
+.pin-title { font-family:'Orbitron',sans-serif; font-size:13px; color:#ffd700; letter-spacing:3px; margin-bottom:6px; }
+.pin-sub   { font-size:11px; color:#4488aa; margin-bottom:18px; letter-spacing:1px; }
+#pin-input { width:100%; padding:14px; background:#060c16; color:#ffd700; font-family:'Orbitron',sans-serif; font-size:24px; letter-spacing:10px; text-align:center; border:1px solid #002d3d; border-radius:4px; outline:none; -webkit-appearance:none; margin-bottom:12px; }
+#pin-input:focus { border-color:#ffd700; }
+#pin-error { font-size:12px; color:#ff3355; min-height:18px; margin-bottom:12px; }
+.pin-buttons { display:flex; gap:10px; }
+.pin-cancel { flex:1; padding:13px; background:#0c1220; color:#4488aa; border:1px solid #002d3d; border-radius:4px; font-family:'Share Tech Mono',monospace; font-size:13px; cursor:pointer; -webkit-appearance:none; }
+.pin-ok { flex:2; padding:13px; background:#ffd700; color:#02040a; border:none; border-radius:4px; font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; letter-spacing:2px; cursor:pointer; -webkit-appearance:none; }
 
-/* ══ PIN MODAL ══ */
-#pin-modal {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.92);
-  z-index: 990; display: none;
-  align-items: center; justify-content: center;
-}
-#pin-modal.open { display: flex; }
-#pin-box {
-  background: #090e18; border: 1px solid #ffd700;
-  border-radius: 8px; padding: 28px 24px;
-  width: 290px; max-width: 90vw; text-align: center;
-}
-.pin-title {
-  font-family: 'Orbitron', sans-serif; font-size: 13px;
-  color: #ffd700; letter-spacing: 3px; margin-bottom: 6px;
-}
-.pin-sub { font-size: 11px; color: #4488aa; margin-bottom: 18px; letter-spacing: 1px; }
-#pin-input {
-  width: 100%; padding: 14px;
-  background: #060c16; color: #ffd700;
-  font-family: 'Orbitron', sans-serif; font-size: 24px;
-  letter-spacing: 10px; text-align: center;
-  border: 1px solid #002d3d; border-radius: 4px;
-  outline: none; -webkit-appearance: none; margin-bottom: 12px;
-}
-#pin-input:focus { border-color: #ffd700; }
-#pin-error { font-size: 12px; color: #ff3355; min-height: 18px; margin-bottom: 12px; }
-.pin-buttons { display: flex; gap: 10px; }
-.pin-cancel {
-  flex: 1; padding: 13px;
-  background: #0c1220; color: #4488aa;
-  border: 1px solid #002d3d; border-radius: 4px;
-  font-family: 'Share Tech Mono', monospace; font-size: 13px;
-  cursor: pointer; -webkit-appearance: none;
-}
-.pin-ok {
-  flex: 2; padding: 13px;
-  background: #ffd700; color: #02040a;
-  border: none; border-radius: 4px;
-  font-family: 'Orbitron', sans-serif; font-size: 12px;
-  font-weight: 700; letter-spacing: 2px;
-  cursor: pointer; -webkit-appearance: none;
-}
+/* TOAST */
+#toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#ffd700; color:#02040a; font-family:'Orbitron',monospace; font-size:12px; letter-spacing:2px; padding:12px 24px; border-radius:4px; opacity:0; pointer-events:none; transition:opacity .3s; z-index:999; white-space:nowrap; }
+#toast.show  { opacity:1; }
+#toast.error { background:#ff3355; color:#fff; }
 
-/* ══ TOAST ══ */
-#toast {
-  position: fixed; bottom: 24px; left: 50%;
-  transform: translateX(-50%);
-  background: #ffd700; color: #02040a;
-  font-family: 'Orbitron', monospace; font-size: 12px;
-  letter-spacing: 2px; padding: 12px 24px;
-  border-radius: 4px; opacity: 0; pointer-events: none;
-  transition: opacity .3s; z-index: 999; white-space: nowrap;
-}
-#toast.show { opacity: 1; }
-#toast.error { background: #ff3355; color: #fff; }
-
-/* STATO VUOTO */
-.empty-state {
-  text-align: center; padding: 40px 16px;
-  color: #6699bb; font-size: 13px;
-  letter-spacing: 1px; line-height: 2.5;
-}
-.empty-icon { font-size: 40px; margin-bottom: 10px; opacity: 0.5; }
-
-::-webkit-scrollbar { width: 2px; }
-::-webkit-scrollbar-thumb { background: #002d3d; }
+.empty-state { text-align:center; padding:40px 16px; color:#6699bb; font-size:13px; letter-spacing:1px; line-height:2.5; }
+.empty-icon  { font-size:40px; margin-bottom:10px; opacity:.5; }
+::-webkit-scrollbar { width:2px; }
+::-webkit-scrollbar-thumb { background:#002d3d; }
 </style>
 </head>
 <body>
@@ -476,7 +228,7 @@ option { background: #060c16; }
     <div id="pin-error"></div>
     <div class="pin-buttons">
       <button class="pin-cancel" id="pin-cancel-btn">ANNULLA</button>
-      <button class="pin-ok" id="pin-ok-btn">◈ OK</button>
+      <button class="pin-ok"     id="pin-ok-btn">◈ OK</button>
     </div>
   </div>
 </div>
@@ -484,7 +236,6 @@ option { background: #060c16; }
 <!-- APP -->
 <div id="app">
 
-  <!-- TOPBAR -->
   <div id="topbar">
     <div id="logo">♠ POKER.OS <small>◈ TRACKER SETTIMANALE</small></div>
     <div id="sync-wrap">
@@ -493,7 +244,6 @@ option { background: #060c16; }
     </div>
   </div>
 
-  <!-- TABS -->
   <div id="tabs">
     <div class="tab active" data-page="rank">🏆 RANK</div>
     <div class="tab" data-page="new">➕ PARTITA</div>
@@ -536,7 +286,7 @@ option { background: #060c16; }
     <div id="stats-list"></div>
   </div>
 
-</div><!-- /app -->
+</div>
 
 <div id="toast"></div>
 
@@ -544,17 +294,15 @@ option { background: #060c16; }
 'use strict';
 
 /* ══════════════════════════════════════════════
-   CONFIGURAZIONE CENTRALIZZATA
+   CONFIGURAZIONE
 ══════════════════════════════════════════════ */
 const CONFIG = {
-  buyIn:          10,
   maxPlayers:     9,
   connectTimeout: 12000,
-  // PIN hashato in SHA-256 — il PIN originale è "1234"
-  // Per cambiare PIN: genera il nuovo hash su https://emn178.github.io/online-tools/sha256.html
-  // e incolla qui sotto. Metti il PIN semplice nel campo pinClear SOLO per test.
-  pinHash: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',
-  // ↑ hash SHA-256 di "1234" — CAMBIA QUESTO con l'hash del tuo PIN segreto
+  // Hash SHA-256 del PIN "1234"
+  // Per cambiare PIN: vai su https://emn178.github.io/online-tools/sha256.html
+  // digita il tuo PIN, copia l'hash e incollalo qui sotto
+  pinHash: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4'
 };
 
 const FIREBASE_CONFIG = {
@@ -568,15 +316,16 @@ const FIREBASE_CONFIG = {
 };
 
 /* ══════════════════════════════════════════════
-   STATO GLOBALE
+   STATO
 ══════════════════════════════════════════════ */
-let database = null;
-let appData  = { players: [], sessions: [] };
+let database    = null;
+let appData     = { players: [], sessions: [] };
 let pinCallback = null;
 
 const formState = {
   step:      1,
   date:      '',
+  quota:     10,       // ← quota per partita, inserita dall'utente
   players:   [],
   reentries: {},
   podium:    ['', '', ''],
@@ -586,16 +335,12 @@ const formState = {
 /* ══════════════════════════════════════════════
    UTILITÀ
 ══════════════════════════════════════════════ */
-// Escaping HTML per prevenire XSS
 function escapeHtml(str) {
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Toast notifica
 function showToast(message, isError = false) {
   const el = document.getElementById('toast');
   el.textContent = message;
@@ -603,12 +348,10 @@ function showToast(message, isError = false) {
   setTimeout(() => el.classList.remove('show'), 2400);
 }
 
-// Hash SHA-256 tramite Web Crypto API (built-in nel browser)
 async function sha256(text) {
   const encoded = new TextEncoder().encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
-  const hashArray  = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const buf = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
 /* ══════════════════════════════════════════════
@@ -617,18 +360,17 @@ async function sha256(text) {
 function hideLoading() {
   document.getElementById('loading').style.display = 'none';
 }
-function showLoadError(message) {
+function showLoadError(msg) {
   document.getElementById('load-spinner').style.display = 'none';
-  const errEl = document.getElementById('load-err');
-  errEl.style.display = 'block';
-  errEl.innerHTML = message.replace(/\n/g, '<br>');
+  const el = document.getElementById('load-err');
+  el.style.display = 'block';
+  el.innerHTML = msg.replace(/\n/g,'<br>');
   document.getElementById('load-retry').style.display = 'block';
 }
 function setSyncStatus(status) {
-  const dot  = document.getElementById('sync-dot');
-  const text = document.getElementById('sync-text');
-  dot.className = status;
-  text.textContent = status === 'online' ? 'ONLINE' : status === 'syncing' ? 'SYNC...' : 'OFFLINE';
+  document.getElementById('sync-dot').className = status;
+  document.getElementById('sync-text').textContent =
+    status === 'online' ? 'ONLINE' : status === 'syncing' ? 'SYNC...' : 'OFFLINE';
 }
 
 /* ══════════════════════════════════════════════
@@ -637,37 +379,28 @@ function setSyncStatus(status) {
 try {
   firebase.initializeApp(FIREBASE_CONFIG);
   database = firebase.database();
+  const timer = setTimeout(() =>
+    showLoadError('Connessione assente o lenta.\nControlla internet e riprova.'), CONFIG.connectTimeout);
 
-  const connectionTimeout = setTimeout(
-    () => showLoadError('Connessione assente o troppo lenta.\nControlla internet e riprova.'),
-    CONFIG.connectTimeout
-  );
-
-  database.ref('pokeros').on('value', snapshot => {
-    clearTimeout(connectionTimeout);
-    const value = snapshot.val();
-    appData.players  = (value && Array.isArray(value.players))  ? value.players  : [];
-    appData.sessions = (value && Array.isArray(value.sessions)) ? value.sessions : [];
+  database.ref('pokeros').on('value', snap => {
+    clearTimeout(timer);
+    const v = snap.val();
+    appData.players  = (v && Array.isArray(v.players))  ? v.players  : [];
+    appData.sessions = (v && Array.isArray(v.sessions)) ? v.sessions : [];
     hideLoading();
     setSyncStatus('online');
     renderAll();
-    if (document.getElementById('page-new').classList.contains('active')) {
-      renderForm();
-    }
-  }, error => {
-    clearTimeout(connectionTimeout);
-    showLoadError('Errore connessione:\n' + error.message);
+    if (document.getElementById('page-new').classList.contains('active')) renderForm();
+  }, err => {
+    clearTimeout(timer);
+    showLoadError('Errore connessione:\n' + err.message);
   });
 
   firebase.database().ref('.info/connected').on('value', snap => {
-    if (document.getElementById('loading').style.display === 'none') {
+    if (document.getElementById('loading').style.display === 'none')
       setSyncStatus(snap.val() ? 'online' : 'offline');
-    }
   });
-
-} catch (error) {
-  showLoadError('Errore Firebase:\n' + error.message);
-}
+} catch(e) { showLoadError('Errore Firebase:\n' + e.message); }
 
 function saveToFirebase() {
   if (!database) return;
@@ -679,23 +412,24 @@ function saveToFirebase() {
 }
 
 /* ══════════════════════════════════════════════
-   TABS — con addEventListener (nessun onclick inline)
+   TABS
 ══════════════════════════════════════════════ */
-document.querySelectorAll('.tab').forEach(tabEl => {
-  tabEl.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t  => t.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    tabEl.classList.add('active');
-    const pageId = 'page-' + tabEl.dataset.page;
-    document.getElementById(pageId).classList.add('active');
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.page).classList.add('active');
     window.scrollTo(0, 0);
-    if (tabEl.dataset.page === 'new') renderForm();
+    if (tab.dataset.page === 'new') renderForm();
     else renderAll();
   });
 });
 
 /* ══════════════════════════════════════════════
-   PIN ADMIN (con hash SHA-256)
+   PIN ADMIN
+   FIX: salvo la callback PRIMA di chiudere il modal,
+   così closePinModal() non la azzera prima di eseguirla.
 ══════════════════════════════════════════════ */
 function openPinModal(callback) {
   pinCallback = callback;
@@ -704,16 +438,21 @@ function openPinModal(callback) {
   document.getElementById('pin-modal').classList.add('open');
   setTimeout(() => document.getElementById('pin-input').focus(), 200);
 }
+
 function closePinModal() {
   document.getElementById('pin-modal').classList.remove('open');
-  pinCallback = null;
+  // NON azzerare pinCallback qui — viene azzerato dopo l'esecuzione in confirmPin()
 }
+
 async function confirmPin() {
-  const enteredPin = document.getElementById('pin-input').value;
-  const enteredHash = await sha256(enteredPin);
-  if (enteredHash === CONFIG.pinHash) {
+  const entered = document.getElementById('pin-input').value;
+  const hash    = await sha256(entered);
+  if (hash === CONFIG.pinHash) {
     closePinModal();
-    if (pinCallback) { pinCallback(); pinCallback = null; }
+    // FIX: salvo la callback in variabile locale PRIMA di azzerare pinCallback
+    const cb = pinCallback;
+    pinCallback = null;
+    if (cb) cb();           // ← eseguo la callback salvata
   } else {
     document.getElementById('pin-error').textContent = '⚠ PIN ERRATO';
     document.getElementById('pin-input').value = '';
@@ -721,8 +460,10 @@ async function confirmPin() {
   }
 }
 
-// Listener PIN modal — addEventListener, non onclick inline
-document.getElementById('pin-cancel-btn').addEventListener('click', closePinModal);
+document.getElementById('pin-cancel-btn').addEventListener('click', () => {
+  closePinModal();
+  pinCallback = null;
+});
 document.getElementById('pin-ok-btn').addEventListener('click', confirmPin);
 document.getElementById('pin-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') confirmPin();
@@ -731,7 +472,7 @@ document.getElementById('pin-input').addEventListener('keydown', e => {
 // Reset storico
 document.getElementById('reset-btn').addEventListener('click', () => {
   openPinModal(() => {
-    if (confirm('Eliminare TUTTE le partite? I giocatori rimarranno.')) {
+    if (confirm('Eliminare TUTTE le partite?\nI giocatori rimarranno.')) {
       appData.sessions = [];
       saveToFirebase();
       renderAll();
@@ -741,35 +482,36 @@ document.getElementById('reset-btn').addEventListener('click', () => {
 });
 
 /* ══════════════════════════════════════════════
-   STATISTICHE GIOCATORI
+   STATISTICHE
 ══════════════════════════════════════════════ */
 function getPlayerStats(playerName) {
   let wins=0, second=0, third=0, earned=0, spent=0, reentries=0, sessions=0;
   appData.sessions.forEach(session => {
     if (!(session.players || []).includes(playerName)) return;
+    const quota = session.quota || 10;
     sessions++;
-    spent += (1 + (session.reentries[playerName] || 0)) * CONFIG.buyIn;
+    spent    += (1 + (session.reentries[playerName] || 0)) * quota;
     reentries += session.reentries[playerName] || 0;
-    const podium = session.podium || [];
-    if      (podium[0] === playerName) { wins++;   earned += Number(session.prizes && session.prizes[0] || 0); }
-    else if (podium[1] === playerName) { second++; earned += Number(session.prizes && session.prizes[1] || 0); }
-    else if (podium[2] === playerName) { third++;  earned += Number(session.prizes && session.prizes[2] || 0); }
+    const pod = session.podium || [];
+    if      (pod[0] === playerName) { wins++;   earned += Number(session.prizes && session.prizes[0] || 0); }
+    else if (pod[1] === playerName) { second++; earned += Number(session.prizes && session.prizes[1] || 0); }
+    else if (pod[2] === playerName) { third++;  earned += Number(session.prizes && session.prizes[2] || 0); }
   });
   return { wins, second, third, earned, spent, net: earned - spent, reentries, sessions };
 }
 
 function getRankedPlayers() {
-  const playerSet = new Set(appData.players);
-  appData.sessions.forEach(s => (s.players || []).forEach(p => playerSet.add(p)));
-  return [...playerSet]
+  const set = new Set(appData.players);
+  appData.sessions.forEach(s => (s.players || []).forEach(p => set.add(p)));
+  return [...set]
     .map(name => ({ name, ...getPlayerStats(name) }))
-    .sort((a, b) => b.net - a.net || b.wins - a.wins);
+    .sort((a,b) => b.net - a.net || b.wins - a.wins);
 }
 
 function getPlayerTitle(stats) {
-  if (stats.wins >= 5)    return '♠ SHARK';
-  if (stats.wins >= 3)    return '♦ PRO';
-  if (stats.wins >= 1)    return '♣ VINCITORE';
+  if (stats.wins >= 5)     return '♠ SHARK';
+  if (stats.wins >= 3)     return '♦ PRO';
+  if (stats.wins >= 1)     return '♣ VINCITORE';
   if (stats.sessions >= 3) return '♥ VETERANO';
   return '◈ ROOKIE';
 }
@@ -784,18 +526,18 @@ function renderRank() {
     container.innerHTML = `<div class="empty-state"><div class="empty-icon">♠</div>NESSUN GIOCATORE<br><span style="color:#aabbcc;font-size:12px;">Vai su "👤 GIOC." per aggiungerne</span></div>`;
     return;
   }
-  container.innerHTML = ranked.map((player, index) => {
-    const badgeClass = ['r1', 'r2', 'r3'][index] || 'rn';
-    const icon       = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1;
-    const moneyClass = player.net > 0 ? 'pos' : player.net < 0 ? 'neg' : 'zero';
-    const sign       = player.net > 0 ? '+' : '';
+  container.innerHTML = ranked.map((player, i) => {
+    const bc   = ['r1','r2','r3'][i] || 'rn';
+    const icon = i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : i+1;
+    const mc   = player.net > 0 ? 'pos' : player.net < 0 ? 'neg' : 'zero';
+    const sign = player.net > 0 ? '+' : '';
     return `<div class="rank-row">
-      <div class="rank-badge ${badgeClass}">${icon}</div>
+      <div class="rank-badge ${bc}">${icon}</div>
       <div class="rank-info">
         <div class="rank-name">${escapeHtml(player.name)}</div>
         <div class="rank-sub">${player.wins}🥇 ${player.second}🥈 ${player.third}🥉 · ${player.sessions} partite · ${player.reentries} rientri</div>
       </div>
-      <div class="rank-money ${moneyClass}">${sign}€${Math.abs(player.net)}</div>
+      <div class="rank-money ${mc}">${sign}€${Math.abs(player.net)}</div>
     </div>`;
   }).join('');
 }
@@ -810,49 +552,45 @@ function renderHistory() {
     return;
   }
 
-  container.innerHTML = [...appData.sessions].reverse().map((session, reversedIndex) => {
-    const originalIndex = appData.sessions.length - 1 - reversedIndex;
-    const pot    = session.players.length * CONFIG.buyIn + Object.values(session.reentries || {}).reduce((a,b) => a+b, 0) * CONFIG.buyIn;
-    const totRe  = Object.values(session.reentries || {}).reduce((a,b) => a+b, 0);
-    const reStr  = Object.entries(session.reentries || {}).filter(([,v]) => v > 0).map(([n,v]) => `${n}×${v}`).join(' · ') || '—';
-    const icons  = ['🥇', '🥈', '🥉'];
+  container.innerHTML = [...appData.sessions].reverse().map((session, ri) => {
+    const origIdx = appData.sessions.length - 1 - ri;
+    const quota   = session.quota || 10;
+    const pot     = session.players.length * quota + Object.values(session.reentries || {}).reduce((a,b) => a+b, 0) * quota;
+    const totRe   = Object.values(session.reentries || {}).reduce((a,b) => a+b, 0);
+    const reStr   = Object.entries(session.reentries || {}).filter(([,v]) => v>0).map(([n,v]) => `${n}×${v}`).join(' · ') || '—';
+    const icons   = ['🥇','🥈','🥉'];
 
     const medalsHtml = (session.podium || []).filter(Boolean).map((name, pi) =>
-      `<div class="medal m${pi+1}">${icons[pi]} ${escapeHtml(name)}${session.prizes && session.prizes[pi] ? ' · €' + session.prizes[pi] : ''}</div>`
+      `<div class="medal m${pi+1}">${icons[pi]} ${escapeHtml(name)}${session.prizes&&session.prizes[pi]?' · €'+session.prizes[pi]:''}</div>`
     ).join('');
 
     const prizesHtml = (session.podium || []).filter(Boolean).map((name, pi) =>
       session.prizes && session.prizes[pi]
-        ? `<div class="prize-row">
-             <span style="color:#4488aa">${pi+1}° POSTO</span>
-             <span style="color:#d0e8ff">${escapeHtml(name)}</span>
-             <span style="color:#00ff88;font-family:'Orbitron',sans-serif;font-size:12px;">€${session.prizes[pi]}</span>
-           </div>`
+        ? `<div class="prize-row"><span style="color:#4488aa">${pi+1}° POSTO</span><span style="color:#d0e8ff">${escapeHtml(name)}</span><span style="color:#00ff88;font-family:'Orbitron',sans-serif;font-size:12px;">€${session.prizes[pi]}</span></div>`
         : ''
     ).join('');
 
     return `<div class="session-card">
-      <div class="session-header" data-session-idx="${originalIndex}">
+      <div class="session-header" data-session-idx="${origIdx}">
         <div>
           <div class="session-date">${escapeHtml(session.date)}</div>
-          <div class="session-meta">${session.players.length} giocatori · pot €${pot} · rientri: ${totRe}</div>
+          <div class="session-meta">${session.players.length} giocatori · quota €${quota} · pot €${pot} · rientri: ${totRe}</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
-          <button class="btn-danger delete-session-btn" data-idx="${originalIndex}" style="padding:6px 10px;font-size:10px;">✕</button>
+          <button class="btn-danger delete-session-btn" data-idx="${origIdx}" style="padding:6px 10px;font-size:10px;">✕</button>
           <span class="tog-arrow" style="color:#4488aa;font-size:14px;">▼</span>
         </div>
       </div>
-      <div class="session-body" id="session-body-${originalIndex}">
+      <div class="session-body" id="session-body-${origIdx}">
         <div class="medals-row">${medalsHtml}</div>
         ${prizesHtml ? `<div style="margin-bottom:10px;">${prizesHtml}</div>` : ''}
         <div style="font-size:10px;color:#4488aa;margin-bottom:6px;">PARTECIPANTI</div>
-        <div class="player-tags">${(session.players || []).map(p => `<div class="player-tag">${escapeHtml(p)}</div>`).join('')}</div>
-        ${reStr !== '—' ? `<div style="font-size:11px;color:#cc44ff;margin-top:6px;">🔄 ${reStr}</div>` : ''}
+        <div class="player-tags">${(session.players||[]).map(p=>`<div class="player-tag">${escapeHtml(p)}</div>`).join('')}</div>
+        ${reStr!=='—'?`<div style="font-size:11px;color:#cc44ff;margin-top:6px;">🔄 ${reStr}</div>`:''}
       </div>
     </div>`;
   }).join('');
 
-  // Listener apertura/chiusura sessione
   container.querySelectorAll('.session-header').forEach(header => {
     header.addEventListener('click', () => {
       const idx   = header.dataset.sessionIdx;
@@ -863,7 +601,6 @@ function renderHistory() {
     });
   });
 
-  // Listener eliminazione sessione (con PIN)
   container.querySelectorAll('.delete-session-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
@@ -872,6 +609,7 @@ function renderHistory() {
         appData.sessions.splice(idx, 1);
         saveToFirebase();
         renderAll();
+        showToast('PARTITA ELIMINATA');
       });
     });
   });
@@ -882,7 +620,6 @@ function renderHistory() {
 ══════════════════════════════════════════════ */
 function renderPlayers() {
   const manageList = document.getElementById('manage-list');
-
   if (!appData.players.length) {
     manageList.innerHTML = `<div style="font-size:13px;color:#6699bb;padding:10px 0 14px;">Nessun giocatore — aggiungine uno!</div>`;
   } else {
@@ -893,8 +630,6 @@ function renderPlayers() {
       </div>`
     ).join('');
 
-    // FIX CRITICO: addEventListener invece di onclick inline
-    // In questo modo nomi con spazi, apostrofi ecc. non causano problemi
     manageList.querySelectorAll('.remove-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const playerIndex = parseInt(btn.dataset.playerIndex, 10);
@@ -909,18 +644,17 @@ function renderPlayers() {
     });
   }
 
-  // Stats cards
   document.getElementById('stats-list').innerHTML = getRankedPlayers().map(player => {
     const sign = player.net >= 0 ? '+' : '';
     return `<div class="player-stat-card">
       <div class="player-stat-header">
-        <div class="player-avatar">${player.name.substring(0, 2).toUpperCase()}</div>
+        <div class="player-avatar">${player.name.substring(0,2).toUpperCase()}</div>
         <div>
           <div style="font-size:15px;color:#d0e8ff;">${escapeHtml(player.name)}</div>
           <div style="font-size:10px;color:#ffd700;letter-spacing:1px;margin-top:3px;">${getPlayerTitle(player)}</div>
         </div>
         <div style="margin-left:auto;text-align:right;">
-          <div style="font-family:'Orbitron',sans-serif;font-size:15px;color:${player.net >= 0 ? '#00ff88' : '#ff3355'};">${sign}€${Math.abs(player.net)}</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:15px;color:${player.net>=0?'#00ff88':'#ff3355'};">${sign}€${Math.abs(player.net)}</div>
           <div style="font-size:10px;color:#4488aa;">NETTO</div>
         </div>
       </div>
@@ -940,15 +674,13 @@ function renderPlayers() {
    AGGIUNGI GIOCATORE
 ══════════════════════════════════════════════ */
 document.getElementById('add-player-btn').addEventListener('click', addPlayer);
-document.getElementById('new-player-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') addPlayer();
-});
+document.getElementById('new-player-input').addEventListener('keydown', e => { if(e.key==='Enter') addPlayer(); });
 function addPlayer() {
   const input = document.getElementById('new-player-input');
   const name  = input.value.trim();
   if (!name) { showToast('INSERISCI UN NOME', true); return; }
   if (appData.players.includes(name)) { showToast('GIÀ PRESENTE', true); return; }
-  if (appData.players.length >= CONFIG.maxPlayers) { showToast('MASSIMO ' + CONFIG.maxPlayers + ' GIOCATORI', true); return; }
+  if (appData.players.length >= CONFIG.maxPlayers) { showToast('MASSIMO ' + CONFIG.maxPlayers, true); return; }
   appData.players.push(name);
   input.value = '';
   saveToFirebase();
@@ -957,23 +689,33 @@ function addPlayer() {
 }
 
 /* ══════════════════════════════════════════════
+   RENDER ALL
+══════════════════════════════════════════════ */
+function renderAll() { renderRank(); renderHistory(); renderPlayers(); }
+
+/* ══════════════════════════════════════════════
    FORM NUOVA PARTITA
-   FIX CRITICO: nessun onclick inline nei player card.
-   Uso addEventListener dopo il render, con data-index.
 ══════════════════════════════════════════════ */
 function initForm() {
   formState.step      = 1;
   formState.date      = new Date().toLocaleDateString('it-IT');
+  formState.quota     = 10;
   formState.players   = [];
   formState.reentries = {};
   formState.podium    = ['', '', ''];
   formState.prizes    = ['', '', ''];
 }
 
+function calcPot() {
+  const totRe = Object.values(formState.reentries).reduce((a,b) => a+b, 0);
+  return (formState.players.length + totRe) * formState.quota;
+}
+
 function renderForm() {
   const container = document.getElementById('form-container');
   if (!container) return;
 
+  /* ── STEP 1: Data, Quota, Giocatori ── */
   if (formState.step === 1) {
     const playerCards = appData.players.map((player, index) => {
       const isSelected = formState.players.includes(player);
@@ -984,13 +726,18 @@ function renderForm() {
     }).join('');
 
     container.innerHTML = `<div class="card">
-      <div class="step-header">
-        <div class="step-num">1</div>
-        <div class="step-title">DATA E GIOCATORI</div>
-      </div>
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">DATA, QUOTA E GIOCATORI</div></div>
+
       <label class="field-label">DATA PARTITA</label>
-      <input class="field-input" id="form-date" type="text" value="${formState.date}" placeholder="gg/mm/aaaa" style="margin-bottom:16px;">
-      <label class="field-label">SELEZIONA GIOCATORI <span id="selected-count" style="color:#ffd700;">(${formState.players.length} selezionati)</span></label>
+      <input class="field-input" id="form-date" type="text" value="${formState.date}"
+             placeholder="gg/mm/aaaa" style="margin-bottom:14px;">
+
+      <label class="field-label">QUOTA DI INGRESSO (€) — vale anche per i rientri</label>
+      <input class="field-input gold" id="form-quota" type="number" inputmode="decimal"
+             min="1" step="0.5" value="${formState.quota}"
+             placeholder="es. 10" style="margin-bottom:14px;">
+
+      <label class="field-label">GIOCATORI <span id="selected-count" style="color:#ffd700;">(${formState.players.length} selezionati)</span></label>
       ${appData.players.length
         ? `<div class="player-grid">${playerCards}</div>`
         : `<div style="font-size:13px;color:#ff3355;padding:12px 0;">⚠ Aggiungi prima i giocatori nella tab "👤 GIOC."</div>`
@@ -1000,7 +747,7 @@ function renderForm() {
       </div>
     </div>`;
 
-    // FIX: addEventListener per ogni card giocatore
+    // Listener selezione giocatori
     container.querySelectorAll('.player-card').forEach(card => {
       card.addEventListener('click', () => {
         const playerIndex = parseInt(card.dataset.playerIndex, 10);
@@ -1018,93 +765,90 @@ function renderForm() {
           card.classList.add('selected');
           card.querySelector('.player-dot').style.background = '#ffd700';
         }
-        const countEl = document.getElementById('selected-count');
-        if (countEl) countEl.textContent = `(${formState.players.length} selezionati)`;
+        const cnt = document.getElementById('selected-count');
+        if (cnt) cnt.textContent = `(${formState.players.length} selezionati)`;
       });
     });
 
     document.getElementById('form-next-1').addEventListener('click', () => {
-      const dateInput = document.getElementById('form-date');
-      if (dateInput) formState.date = dateInput.value.trim() || formState.date;
+      const dateEl  = document.getElementById('form-date');
+      const quotaEl = document.getElementById('form-quota');
+      if (dateEl)  formState.date  = dateEl.value.trim() || formState.date;
+      if (quotaEl) formState.quota = parseFloat(quotaEl.value) || 10;
+      if (formState.quota <= 0)         { showToast('INSERISCI UNA QUOTA VALIDA', true); return; }
       if (formState.players.length < 2) { showToast('SELEZIONA ALMENO 2 GIOCATORI', true); return; }
       formState.step = 2;
       renderForm();
     });
 
+  /* ── STEP 2: Rientri ── */
   } else if (formState.step === 2) {
-    const totalReentries = Object.values(formState.reentries).reduce((a,b) => a+b, 0);
-    const pot = formState.players.length * CONFIG.buyIn + totalReentries * CONFIG.buyIn;
-
     container.innerHTML = `<div class="card">
-      <div class="step-header">
-        <div class="step-num">2</div>
-        <div class="step-title">RIENTRI</div>
-      </div>
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">RIENTRI</div></div>
       <div class="info-bar">
         <span>GIOCATORI: <strong>${formState.players.length}</strong></span>
-        <span>POT: <strong id="pot-display">€${pot}</strong></span>
+        <span>QUOTA: <strong>€${formState.quota}</strong></span>
+        <span>POT: <strong id="pot-display">€${calcPot()}</strong></span>
       </div>
       ${formState.players.map(player => `
         <div class="re-player">
           <div class="re-player-name">${escapeHtml(player)}</div>
           <div class="re-controls">
             <button class="count-btn" data-player="${escapeHtml(player)}" data-delta="-1">−</button>
-            <div class="count-val" id="re-count-${player.replace(/\W/g,'_')}">${formState.reentries[player] || 0}</div>
+            <div class="count-val" id="re-count-${player.replace(/\W/g,'_')}">${formState.reentries[player]||0}</div>
             <button class="count-btn" data-player="${escapeHtml(player)}" data-delta="1">+</button>
           </div>
         </div>`).join('')}
       <div class="nav-row">
         <button class="btn-secondary" id="re-back">◀ INDIETRO</button>
-        <button class="btn-primary" id="re-next">AVANTI ▶</button>
+        <button class="btn-primary"   id="re-next">AVANTI ▶</button>
       </div>
     </div>`;
 
-    // Listener rientri
     container.querySelectorAll('.count-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const playerName = btn.dataset.player;
         const delta      = parseInt(btn.dataset.delta, 10);
-        formState.reentries[playerName] = Math.max(0, (formState.reentries[playerName] || 0) + delta);
+        formState.reentries[playerName] = Math.max(0, (formState.reentries[playerName]||0) + delta);
         const countEl = document.getElementById('re-count-' + playerName.replace(/\W/g,'_'));
         if (countEl) countEl.textContent = formState.reentries[playerName];
-        const newTotal = Object.values(formState.reentries).reduce((a,b) => a+b, 0);
         const potEl = document.getElementById('pot-display');
-        if (potEl) potEl.textContent = '€' + (formState.players.length * CONFIG.buyIn + newTotal * CONFIG.buyIn);
+        if (potEl) potEl.textContent = '€' + calcPot();
       });
     });
+
     document.getElementById('re-back').addEventListener('click', () => { formState.step = 1; renderForm(); });
     document.getElementById('re-next').addEventListener('click', () => { formState.step = 3; renderForm(); });
 
+  /* ── STEP 3: Podio ── */
   } else if (formState.step === 3) {
-    const makeSlot = (index) => {
-      const labels = ['🥇 1° POSTO', '🥈 2° POSTO', '🥉 3° POSTO'];
-      const classes = ['p1', 'p2', 'p3'];
-      const options = ['<option value="">— seleziona —</option>',
-        ...formState.players.map(p => `<option value="${escapeHtml(p)}"${formState.podium[index] === p ? ' selected' : ''}>${escapeHtml(p)}</option>`)
+    const makeSlot = idx => {
+      const labels  = ['🥇 1° POSTO','🥈 2° POSTO','🥉 3° POSTO'];
+      const classes = ['p1','p2','p3'];
+      const opts = ['<option value="">— seleziona —</option>',
+        ...formState.players.map(p =>
+          `<option value="${escapeHtml(p)}"${formState.podium[idx]===p?' selected':''}>${escapeHtml(p)}</option>`)
       ].join('');
-      return `<div class="podium-slot ${classes[index]}">
-        <div class="podium-label ${classes[index]}">${labels[index]}</div>
+      return `<div class="podium-slot ${classes[idx]}">
+        <div class="podium-label ${classes[idx]}">${labels[idx]}</div>
         <div class="podium-row">
-          <select class="field-select podium-select" data-podium-index="${index}" style="flex:1">${options}</select>
+          <select class="field-select podium-select" data-podium-index="${idx}" style="flex:1">${opts}</select>
           <input class="field-input gold prize-input" type="number" inputmode="decimal"
             placeholder="€ vincita" min="0" step="0.01"
-            data-prize-index="${index}"
+            data-prize-index="${idx}"
             style="width:120px;flex-shrink:0;"
-            value="${formState.prizes[index] || ''}">
+            value="${formState.prizes[idx]||''}">
         </div>
       </div>`;
     };
 
     container.innerHTML = `<div class="card">
-      <div class="step-header">
-        <div class="step-num">3</div>
-        <div class="step-title">PODIO E PREMI</div>
-      </div>
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">PODIO E PREMI</div></div>
       <div style="font-size:11px;color:#4488aa;margin-bottom:14px;">La vincita € è opzionale.</div>
-      ${makeSlot(0)}${makeSlot(1)}${formState.players.length >= 3 ? makeSlot(2) : ''}
+      ${makeSlot(0)}${makeSlot(1)}${formState.players.length>=3 ? makeSlot(2) : ''}
       <div class="nav-row">
         <button class="btn-secondary" id="pod-back">◀ INDIETRO</button>
-        <button class="btn-primary" id="pod-next">AVANTI ▶</button>
+        <button class="btn-primary"   id="pod-next">AVANTI ▶</button>
       </div>
     </div>`;
 
@@ -1115,8 +859,7 @@ function renderForm() {
     });
     container.querySelectorAll('.prize-input').forEach(inp => {
       inp.addEventListener('input', () => {
-        const idx = parseInt(inp.dataset.prizeIndex, 10);
-        formState.prizes[idx] = inp.value ? parseFloat(inp.value) : '';
+        formState.prizes[parseInt(inp.dataset.prizeIndex, 10)] = inp.value ? parseFloat(inp.value) : '';
       });
     });
     document.getElementById('pod-back').addEventListener('click', () => { formState.step = 2; renderForm(); });
@@ -1125,32 +868,33 @@ function renderForm() {
       formState.step = 4; renderForm();
     });
 
+  /* ── STEP 4: Riepilogo ── */
   } else if (formState.step === 4) {
-    const pot    = formState.players.length * CONFIG.buyIn + Object.values(formState.reentries).reduce((a,b) => a+b, 0) * CONFIG.buyIn;
     const totRe  = Object.values(formState.reentries).reduce((a,b) => a+b, 0);
-    const reStr  = Object.entries(formState.reentries).filter(([,v]) => v > 0).map(([n,v]) => `${n} ×${v}`).join(', ') || 'Nessuno';
-    const places = ['🥇 1°', '🥈 2°', '🥉 3°'];
+    const reStr  = Object.entries(formState.reentries).filter(([,v])=>v>0).map(([n,v])=>`${n} ×${v}`).join(', ') || 'Nessuno';
+    const places = ['🥇 1°','🥈 2°','🥉 3°'];
     const podiumHtml = formState.podium.filter(Boolean).map((name, i) =>
       `<div class="prize-row">
         <span style="color:#4488aa">${places[i]}</span>
         <span style="color:#d0e8ff">${escapeHtml(name)}</span>
-        <span style="color:#00ff88;font-family:'Orbitron',sans-serif;font-size:12px;">${formState.prizes[i] ? '€' + formState.prizes[i] : ''}</span>
+        <span style="color:#00ff88;font-family:'Orbitron',sans-serif;font-size:12px;">${formState.prizes[i]?'€'+formState.prizes[i]:''}</span>
       </div>`
     ).join('');
 
     container.innerHTML = `<div class="card">
-      <div class="step-header">
-        <div class="step-num">4</div>
-        <div class="step-title">RIEPILOGO</div>
-      </div>
+      <div class="step-header"><div class="step-num">4</div><div class="step-title">RIEPILOGO</div></div>
       <div class="info-bar" style="margin-bottom:14px;">
         <span>📅 <strong>${formState.date}</strong></span>
         <span>👥 <strong>${formState.players.length}</strong></span>
-        <span>💰 <strong>€${pot}</strong></span>
+        <span>💰 POT <strong>€${calcPot()}</strong></span>
+      </div>
+      <div style="background:#0c1220;border-radius:4px;padding:9px 12px;margin-bottom:14px;font-size:12px;">
+        💳 QUOTA: <span style="color:#ffd700;font-family:'Orbitron',sans-serif;">€${formState.quota}</span>
+        <span style="color:#4488aa;"> · vale anche per ogni rientro</span>
       </div>
       <div style="font-size:11px;color:#4488aa;margin-bottom:8px;">PARTECIPANTI</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
-        ${formState.players.map(p => `<div class="player-tag" style="color:#d0e8ff;">${escapeHtml(p)}</div>`).join('')}
+        ${formState.players.map(p=>`<div class="player-tag" style="color:#d0e8ff;">${escapeHtml(p)}</div>`).join('')}
       </div>
       <div style="font-size:11px;color:#4488aa;margin-bottom:6px;">RIENTRI (${totRe})</div>
       <div style="font-size:13px;color:#cc44ff;margin-bottom:14px;">🔄 ${reStr}</div>
@@ -1158,18 +902,19 @@ function renderForm() {
       <div style="margin-bottom:16px;">${podiumHtml}</div>
       <div class="nav-row">
         <button class="btn-secondary" id="save-back">◀ MODIFICA</button>
-        <button class="btn-primary" id="save-session-btn">♠ SALVA PARTITA</button>
+        <button class="btn-primary"   id="save-btn">♠ SALVA PARTITA</button>
       </div>
     </div>`;
 
     document.getElementById('save-back').addEventListener('click', () => { formState.step = 3; renderForm(); });
-    document.getElementById('save-session-btn').addEventListener('click', saveSession);
+    document.getElementById('save-btn').addEventListener('click', saveSession);
   }
 }
 
 function saveSession() {
   appData.sessions.push({
     date:      formState.date,
+    quota:     formState.quota,        // ← quota salvata per ogni partita
     players:   [...formState.players],
     reentries: { ...formState.reentries },
     podium:    formState.podium.map(v => v || null),
@@ -1178,8 +923,7 @@ function saveSession() {
   saveToFirebase();
   showToast('♠ PARTITA SALVATA!');
   initForm();
-  // Torna alla classifica
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t  => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelector('[data-page="rank"]').classList.add('active');
   document.getElementById('page-rank').classList.add('active');
@@ -1187,46 +931,35 @@ function saveSession() {
 }
 
 /* ══════════════════════════════════════════════
-   RENDER ALL
+   STELLE
 ══════════════════════════════════════════════ */
-function renderAll() {
-  renderRank();
-  renderHistory();
-  renderPlayers();
-}
-
-/* ══════════════════════════════════════════════
-   STELLE ANIMATE
-══════════════════════════════════════════════ */
-(function initStars() {
+(function() {
   const canvas = document.getElementById('bg-canvas');
   const ctx    = canvas.getContext('2d');
-  const stars  = Array.from({ length: 60 }, () => ({
-    x:     Math.random() * 9999,
-    y:     Math.random() * 9999,
-    r:     Math.random() * 1.3 + 0.3,
-    phase: Math.random() * Math.PI * 2,
-    speed: Math.random() * 0.015 + 0.005
+  const stars  = Array.from({length:60}, () => ({
+    x: Math.random()*9999, y: Math.random()*9999,
+    r: Math.random()*1.3+0.3,
+    phase: Math.random()*Math.PI*2,
+    speed: Math.random()*0.015+0.005
   }));
   function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
-  resize();
-  window.addEventListener('resize', resize);
+  resize(); window.addEventListener('resize', resize);
   (function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     stars.forEach(star => {
       star.phase += star.speed;
-      const alpha = 0.1 + 0.7 * (0.5 + 0.5 * Math.sin(star.phase));
+      const a = 0.1 + 0.7*(0.5+0.5*Math.sin(star.phase));
       ctx.beginPath();
-      ctx.arc(star.x % canvas.width, star.y % canvas.height, star.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${Math.round(alpha * 120)},${Math.round(alpha * 190)},255,${alpha})`;
+      ctx.arc(star.x%canvas.width, star.y%canvas.height, star.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${Math.round(a*120)},${Math.round(a*190)},255,${a})`;
       ctx.fill();
     });
     requestAnimationFrame(draw);
   })();
 })();
 
-/* INIT */
 initForm();
 </script>
 </body>
 </html>
+
