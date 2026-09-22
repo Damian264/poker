@@ -204,6 +204,27 @@ option { background:#060c16; }
 .empty-icon  { font-size:40px; margin-bottom:10px; opacity:.5; }
 ::-webkit-scrollbar { width:2px; }
 ::-webkit-scrollbar-thumb { background:#002d3d; }
+
+/* ══ MODALITÀ STANDBY (sola lettura) ══ */
+#standby-banner {
+  display:none; flex-shrink:0; background:#3a2d00; border-bottom:1px solid #ffd700;
+  color:#ffd700; font-size:11px; letter-spacing:1.5px; text-align:center;
+  padding:9px 14px; line-height:1.9;
+}
+body.standby #standby-banner { display:block; }
+.standby-sub  { color:#4488aa; letter-spacing:1px; }
+.standby-link {
+  display:inline-block; margin-top:7px; padding:8px 16px;
+  background:#02040a; color:#ffd700; border:1px solid #ffd700; border-radius:4px;
+  font-family:'Orbitron',sans-serif; font-size:12px; letter-spacing:1px;
+  text-decoration:none; word-break:break-all;
+}
+.standby-link:active { background:#ffd700; color:#02040a; }
+body.standby .tab[data-page="new"],
+body.standby #reset-btn,
+body.standby .remove-btn,
+body.standby .delete-session-btn,
+body.standby .add-row { display:none !important; }
 </style>
 </head>
 <body>
@@ -242,6 +263,12 @@ option { background:#060c16; }
       <div id="sync-dot"></div>
       <span id="sync-text" style="font-size:10px;color:#4488aa;margin-left:6px;letter-spacing:1px;">—</span>
     </div>
+  </div>
+
+  <div id="standby-banner">
+    ⏸ MI DISPIACE, QUESTA APP NON È PIÙ ATTIVA<br>
+    <span class="standby-sub">Per salvare una nuova partita usa questo sito:</span><br>
+    <a class="standby-link" href="https://home-game-livid.vercel.app/" target="_blank" rel="noopener">home-game-livid.vercel.app</a>
   </div>
 
   <div id="tabs">
@@ -297,7 +324,10 @@ option { background:#060c16; }
    CONFIGURAZIONE
 ══════════════════════════════════════════════ */
 const CONFIG = {
-  maxPlayers:     999,
+  // true  = sito IN PAUSA: si può solo consultare, nessuna modifica
+  // false = sito ATTIVO come prima
+  standby:        true,
+  maxPlayers:     9,
   connectTimeout: 12000,
   // Hash SHA-256 del PIN "1234"
   // Per cambiare PIN: vai su https://emn178.github.io/online-tools/sha256.html
@@ -403,6 +433,7 @@ try {
 } catch(e) { showLoadError('Errore Firebase:\n' + e.message); }
 
 function saveToFirebase() {
+  if (CONFIG.standby) { showToast('SITO IN PAUSA — SOLA LETTURA', true); return; }
   if (!database) return;
   setSyncStatus('syncing');
   database.ref('pokeros')
@@ -958,8 +989,18 @@ function saveSession() {
   })();
 })();
 
+/* ══════════════════════════════
+   STANDBY — disattiva ogni comando di modifica
+══════════════════════════════ */
+if (CONFIG.standby) {
+  document.body.classList.add('standby');
+  document.querySelector('.tab[data-page="new"]').classList.remove('active');
+  document.getElementById('page-new').classList.remove('active');
+  document.querySelector('.tab[data-page="rank"]').classList.add('active');
+  document.getElementById('page-rank').classList.add('active');
+}
+
 initForm();
 </script>
 </body>
 </html>
-
